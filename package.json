@@ -1,6 +1,6 @@
 {
   "name": "cluster_crawlers",
-  "version": "Sample Application",
+  "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
