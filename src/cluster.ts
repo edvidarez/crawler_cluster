@@ -1,4 +1,4 @@
-import vanillaPuppeteer from "puppeteer";
+import chromium from "chrome-aws-lambda";
 import { addExtra } from "puppeteer-extra";
 
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
@@ -10,7 +10,7 @@ const adblocker = AdblockerPlugin({
 import { Cluster } from "puppeteer-cluster";
 
 // @ts-ignore
-const puppeteer = addExtra(vanillaPuppeteer);
+const puppeteer = addExtra(chromium.puppeteer);
 puppeteer.use(StealthPlugin());
 puppeteer.use(
   require("puppeteer-extra-plugin-anonymize-ua")({
@@ -32,8 +32,11 @@ const initCluster = async () => {
     retryLimit: 2,
     retryDelay: 5000,
     puppeteerOptions: {
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
+      ignoreHTTPSErrors: true,
     },
     monitor: true,
     puppeteer,
