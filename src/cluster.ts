@@ -38,7 +38,6 @@ const initCluster = async () => {
       headless: true,
       ignoreHTTPSErrors: true,
     },
-    monitor: true,
     puppeteer,
     sameDomainDelay: 15000,
     timeout: 120000,
