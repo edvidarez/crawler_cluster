@@ -12,7 +12,11 @@ const process = async () => {
     })
     .map((dv) => dv.id);
   console.log("frazerDesignerVersions", frazerDesignerVersions);
-  const frazerSites = sites.filter((site) => {
+  const frazerSites: {
+    id?: number;
+    designerVersionId?: number;
+    url: string;
+  }[] = sites.filter((site) => {
     return frazerDesignerVersions.includes(site.designerVersionId);
   });
   console.log(
@@ -21,10 +25,11 @@ const process = async () => {
     frazerSites.slice(0, 10),
     JSON.stringify(frazerSites.slice(0, 10), null, 2)
   );
+  const cluster = await getCluster();
   frazerSites.map((site) => {
     crawl(site);
   });
-  const cluster = await getCluster();
+
   await cluster.idle();
   await cluster.close();
 };
