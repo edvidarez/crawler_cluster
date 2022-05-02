@@ -1,6 +1,8 @@
+import { v4 } from "uuid";
+import AWS from "aws-sdk";
 import chromium from "chrome-aws-lambda";
 import { addExtra } from "puppeteer-extra";
-
+AWS.config.update({ region: "us-east-1" });
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 const AdblockerPlugin = require("puppeteer-extra-plugin-adblocker");
 const adblocker = AdblockerPlugin({
@@ -53,11 +55,31 @@ const initCluster = async () => {
     }
   });
   await cluster.task(async ({ page, data: url }) => {
-    console.log("going to url", url);
-    await page.goto(url, { timeout: 120000 });
+    console.log("going to url", url, " ");
+    await page.goto(url, { timeout: 120000, waitUntil: "networkidle2" });
     const { hostname } = new URL(url);
-    await page.screenshot({ path: `${hostname}.png`, fullPage: true });
-    return 1;
+    const today = new Date();
+    const dateStr = `${today.getFullYear()}_${today.getMonth()}_${
+      today.getDay() + 1
+    } ${today.getHours()}:${today.getMinutes()}`;
+    const hostKey = `${hostname}_${dateStr}.png`;
+    console.log("Key:hostKey,", hostKey);
+    const base64 = await page.screenshot({
+      path: hostKey,
+      fullPage: true,
+    });
+    try {
+      const params: AWS.S3.PutObjectRequest = {
+        Bucket: "screenshots-borrar",
+        Key: hostKey,
+        Body: base64 || "",
+      };
+      const s3 = new AWS.S3();
+      await s3.upload(params).promise();
+      console.log("file_uploaded");
+    } catch (err) {
+      console.log("error uploading to s3", err.message);
+    }
   });
 
   // // when idle close the browser

@@ -12,8 +12,8 @@ const start = () => {
   });
   app.post("/", async (req, res) => {
     console.log(req.body);
-    const html = await crawl(req.body);
-    res.json({ html });
+    crawl(req.body);
+    res.json({ message: `url ${req.body.url} added to the queue` });
   });
   const port = process.env.PORT || 8080;
   app.listen(port, () => {
