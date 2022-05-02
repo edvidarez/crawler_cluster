@@ -5,9 +5,6 @@ import { addExtra } from "puppeteer-extra";
 AWS.config.update({ region: "us-east-1" });
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 const AdblockerPlugin = require("puppeteer-extra-plugin-adblocker");
-const adblocker = AdblockerPlugin({
-  blockTrackers: true, // default: false
-});
 
 import { Cluster } from "puppeteer-cluster";
 
@@ -19,7 +16,17 @@ puppeteer.use(
     customFn: (ua: string) => "MyCoolAgent/" + ua.replace("Chrome", "Beer"),
   })
 );
-puppeteer.use(AdblockerPlugin());
+puppeteer.use(
+  require("puppeteer-extra-plugin-block-resources")({
+    blockedTypes: new Set(["image", "stylesheet"]),
+  })
+);
+
+puppeteer.use(
+  AdblockerPlugin({
+    blockTrackers: true,
+  })
+);
 let cluster: Cluster;
 
 const initCluster = async () => {

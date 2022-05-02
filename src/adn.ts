@@ -16,9 +16,10 @@ const process = async () => {
     id?: number;
     designerVersionId?: number;
     url: string;
-  }[] = sites.filter((site) => {
-    return frazerDesignerVersions.includes(site.designerVersionId);
-  });
+  }[] =
+    sites.filter((site) => {
+      return frazerDesignerVersions.includes(site.designerVersionId);
+    }) || [];
   console.log(
     "frazerSites",
     frazerSites.length,
@@ -26,7 +27,7 @@ const process = async () => {
     JSON.stringify(frazerSites.slice(0, 10), null, 2)
   );
   const cluster = await getCluster();
-  frazerSites.map((site) => {
+  frazerSites.slice(0, 10).map((site) => {
     crawl(site);
   });
 
