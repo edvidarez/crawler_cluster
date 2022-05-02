@@ -29,7 +29,7 @@ const initCluster = async () => {
   );
   cluster = await Cluster.launch({
     concurrency: Cluster.CONCURRENCY_CONTEXT,
-    maxConcurrency: 8,
+    maxConcurrency: 2,
     workerCreationDelay: 5000,
     retryLimit: 2,
     retryDelay: 5000,
@@ -38,6 +38,7 @@ const initCluster = async () => {
       headless: true,
       ignoreHTTPSErrors: true,
     },
+    monitor: true,
     puppeteer,
     sameDomainDelay: 15000,
     timeout: 120000,
@@ -62,12 +63,11 @@ const initCluster = async () => {
     const hostKey = `${hostname}_${dateStr}.png`;
     console.log("Key:hostKey,", hostKey);
     const base64 = await page.screenshot({
-      path: hostKey,
       fullPage: true,
     });
     try {
       const params: AWS.S3.PutObjectRequest = {
-        Bucket: "screenshots-borrar",
+        Bucket: "screenshots-adn",
         Key: hostKey,
         Body: base64 || "",
       };
