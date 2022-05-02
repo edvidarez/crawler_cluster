@@ -1,6 +1,6 @@
 import { v4 } from "uuid";
 import AWS from "aws-sdk";
-import chromium from "chrome-aws-lambda";
+import vanillaPuppeteer from "puppeteer";
 import { addExtra } from "puppeteer-extra";
 AWS.config.update({ region: "us-east-1" });
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
@@ -12,7 +12,7 @@ const adblocker = AdblockerPlugin({
 import { Cluster } from "puppeteer-cluster";
 
 // @ts-ignore
-const puppeteer = addExtra(chromium.puppeteer);
+const puppeteer = addExtra(vanillaPuppeteer);
 puppeteer.use(StealthPlugin());
 puppeteer.use(
   require("puppeteer-extra-plugin-anonymize-ua")({
@@ -34,10 +34,8 @@ const initCluster = async () => {
     retryLimit: 2,
     retryDelay: 5000,
     puppeteerOptions: {
-      args: chromium.args,
-      defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      headless: true,
       ignoreHTTPSErrors: true,
     },
     monitor: true,
