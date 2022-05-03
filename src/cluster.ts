@@ -16,17 +16,17 @@ puppeteer.use(
     customFn: (ua: string) => "MyCoolAgent/" + ua.replace("Chrome", "Beer"),
   })
 );
-puppeteer.use(
-  require("puppeteer-extra-plugin-block-resources")({
-    blockedTypes: new Set(["image", "stylesheet"]),
-  })
-);
+// puppeteer.use(
+//   require("puppeteer-extra-plugin-block-resources")({
+//     blockedTypes: new Set(["image", "stylesheet"]),
+//   })
+// );
 
-puppeteer.use(
-  AdblockerPlugin({
-    blockTrackers: true,
-  })
-);
+// puppeteer.use(
+//   AdblockerPlugin({
+//     blockTrackers: true,
+//   })
+// );
 let cluster: Cluster;
 
 const initCluster = async () => {
@@ -61,7 +61,20 @@ const initCluster = async () => {
   });
   await cluster.task(async ({ page, data: url }) => {
     console.log("going to url", url, " ");
-    await page.goto(url, { timeout: 120000, waitUntil: "networkidle2" });
+    await page.setRequestInterception(true);
+    page.on("request", (req) => {
+      if (
+        req.resourceType() === "image" ||
+        req.resourceType() === "stylesheet"
+      ) {
+        return req.abort();
+      } else {
+        return req.continue();
+      }
+    });
+
+    await page.goto(url, { timeout: 120000, waitUntil: "domcontentloaded" });
+    await page.waitForTimeout(5000);
     const { hostname } = new URL(url);
     const today = new Date();
     const dateStr = `${today.getFullYear()}_${today.getMonth()}_${
@@ -70,6 +83,7 @@ const initCluster = async () => {
     const hostKey = `${hostname}_${dateStr}.png`;
     console.log("Key:hostKey,", hostKey);
     const base64 = await page.screenshot({
+      // path: hostKey,
       fullPage: true,
     });
     try {
