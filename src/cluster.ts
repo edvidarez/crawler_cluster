@@ -4,29 +4,33 @@ import vanillaPuppeteer from "puppeteer";
 import { addExtra } from "puppeteer-extra";
 AWS.config.update({ region: "us-east-1" });
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-const AdblockerPlugin = require("puppeteer-extra-plugin-adblocker");
+import Adblocker from "puppeteer-extra-plugin-adblocker";
+import AnonymizeUA from "puppeteer-extra-plugin-anonymize-ua";
+import BlockResources from "puppeteer-extra-plugin-block-resources";
 
 import { Cluster } from "puppeteer-cluster";
 
 // @ts-ignore
 const puppeteer = addExtra(vanillaPuppeteer);
-puppeteer.use(StealthPlugin());
-puppeteer.use(
-  require("puppeteer-extra-plugin-anonymize-ua")({
-    customFn: (ua: string) => "MyCoolAgent/" + ua.replace("Chrome", "Beer"),
+
+/* puppeteer.use(
+  BlockResources({
+    blockedTypes: new Set(["image"]),
   })
 );
-// puppeteer.use(
-//   require("puppeteer-extra-plugin-block-resources")({
-//     blockedTypes: new Set(["image", "stylesheet"]),
-//   })
-// );
 
-// puppeteer.use(
-//   AdblockerPlugin({
-//     blockTrackers: true,
-//   })
-// );
+puppeteer.use(
+  Adblocker({
+    blockTrackers: true,
+  })
+);
+*/
+puppeteer.use(
+  AnonymizeUA({
+    // customFn: (ua: string) => "MyCoolAgent/" + ua.replace("Chrome", "Beer"),
+  })
+);
+// puppeteer.use(StealthPlugin());
 let cluster: Cluster;
 
 const initCluster = async () => {
@@ -35,14 +39,19 @@ const initCluster = async () => {
     Cluster.CONCURRENCY_CONTEXT
   );
   cluster = await Cluster.launch({
-    concurrency: Cluster.CONCURRENCY_CONTEXT,
+    concurrency: Cluster.CONCURRENCY_PAGE,
     maxConcurrency: 2,
     workerCreationDelay: 5000,
     retryLimit: 2,
     retryDelay: 5000,
     puppeteerOptions: {
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--ignore-certificate-errors",
+        "--enable-features=NetworkService",
+      ],
+      headless: false,
       ignoreHTTPSErrors: true,
     },
     monitor: true,
@@ -61,8 +70,8 @@ const initCluster = async () => {
   });
   await cluster.task(async ({ page, data: url }) => {
     console.log("going to url", url, " ");
-    await page.setRequestInterception(true);
-    page.on("request", (req) => {
+    // await page.setRequestInterception(true);
+    /* page.on("request", (req) => {
       if (
         req.resourceType() === "image" ||
         req.resourceType() === "stylesheet"
@@ -71,10 +80,10 @@ const initCluster = async () => {
       } else {
         return req.continue();
       }
-    });
+    }); */
 
-    await page.goto(url, { timeout: 120000, waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(5000);
+    await page.goto(url, { timeout: 0, waitUntil: "networkidle2" });
+    // await page.waitForTimeout(5000);
     const { hostname } = new URL(url);
     const today = new Date();
     const dateStr = `${today.getFullYear()}_${today.getMonth()}_${
@@ -83,10 +92,11 @@ const initCluster = async () => {
     const hostKey = `${hostname}_${dateStr}.png`;
     console.log("Key:hostKey,", hostKey);
     const base64 = await page.screenshot({
-      // path: hostKey,
+      path: hostKey,
       fullPage: true,
     });
-    try {
+    return await page.content();
+    /* try {
       const params: AWS.S3.PutObjectRequest = {
         Bucket: "screenshots-adn",
         Key: hostKey,
@@ -97,7 +107,7 @@ const initCluster = async () => {
       console.log("file_uploaded");
     } catch (err) {
       console.log("error uploading to s3", err.message);
-    }
+    } */
   });
 
   // // when idle close the browser

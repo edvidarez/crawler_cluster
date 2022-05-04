@@ -1,5 +1,5 @@
 import express from "express";
-import crawl from "./crawler";
+import { crawl, addToQueue } from "./crawler";
 
 const start = () => {
   const app = express();
@@ -12,8 +12,14 @@ const start = () => {
   });
   app.post("/", async (req, res) => {
     console.log(req.body);
-    crawl(req.body);
+    addToQueue(req.body);
     res.json({ message: `url ${req.body.url} added to the queue` });
+  });
+  app.post("/crawl", async (req, res) => {
+    console.log(req.body);
+    const response = await crawl(req.body);
+    res.setHeader("Content-Type", "text/html");
+    res.send(response);
   });
   const port = process.env.PORT || 8080;
   app.listen(port, () => {

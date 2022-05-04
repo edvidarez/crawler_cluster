@@ -1,6 +1,6 @@
 import { getCluster } from "./cluster";
 
-const crawl = async ({
+const addToQueue = async ({
   url,
 }: {
   id?: number;
@@ -12,4 +12,10 @@ const crawl = async ({
   cluster.queue(url);
 };
 
-export default crawl;
+const crawl = async ({ url }) => {
+  const cluster = await getCluster();
+  const response = cluster.execute(url);
+  return response;
+};
+
+export { addToQueue, crawl };

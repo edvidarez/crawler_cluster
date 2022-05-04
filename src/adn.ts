@@ -1,6 +1,6 @@
 import { sites } from "../data/sites.json";
 import { designerVersions } from "../data/designerVersions.json";
-import crawl from "./crawler";
+import { addToQueue } from "./crawler";
 import { getCluster } from "./cluster";
 
 const process = async () => {
@@ -28,7 +28,7 @@ const process = async () => {
   );
   const cluster = await getCluster();
   frazerSites.slice(0, 10).map((site) => {
-    crawl(site);
+    addToQueue(site);
   });
 
   await cluster.idle();
