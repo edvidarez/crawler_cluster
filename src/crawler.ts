@@ -1,4 +1,6 @@
 import { getCluster } from "./cluster";
+import crawlerProcess from "./crawlerProcess";
+import { stats } from "./stats";
 
 const addToQueue = async ({
   url,
@@ -12,10 +14,13 @@ const addToQueue = async ({
   cluster.queue(url);
 };
 
-const crawl = async ({ url }) => {
+const crawl = async ({ id, url, designerVersion }) => {
   const cluster = await getCluster();
-  const response = cluster.execute(url);
-  return response;
+  // stats["sitesCrawled"] = stats["sitesCrawled"]
+  //   ? stats["sitesCrawled"].push(id)
+  //   : [id];
+  cluster.queue({ id, url, designerVersion }, crawlerProcess);
+  return;
 };
 
 export { addToQueue, crawl };
