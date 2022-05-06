@@ -1,3 +1,5 @@
+.env
+.ebextensions
 node_modules
 .build
 build
